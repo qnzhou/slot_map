@@ -16,5 +16,5 @@ build_script:
 - cmake ..
 - cd ..
 - cmake --build .\build\ --config Debug
-- OpenCppCoverage.exe --export_type=cobertura:cobertura.xml --stop_on_assert --sources slot*.* --excluded_sources SlotMapTest02.cpp --excluded_sources *googletest* --modules *.exe -- .\build2019\Debug\SlotMapTest.exe --gtest_filter=-SlotMapTest.*_Slow
+- OpenCppCoverage.exe --export_type=cobertura:cobertura.xml --stop_on_assert --sources slot*.* --excluded_sources SlotMapTest02.cpp --excluded_sources *googletest* --modules *.exe -- .\build\Debug\SlotMapTest.exe --gtest_filter=-SlotMapTest.*_Slow
 - codecov -f cobertura.xml --root %APPVEYOR_BUILD_FOLDER% -t b0702cef-2896-4df0-9d13-f16a95f7e0bf
