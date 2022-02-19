@@ -23,7 +23,7 @@ jobs:
     - name: Build
       run: cd build && cmake --build . --config Release
     - name: Run unit tests
-      run: cd build && ./SlotMapTest
+      run: cd build && ./SlotMapTest --gtest_filter=-SlotMapTest.*_Slow
   build-windows:
     runs-on: windows-latest
     strategy:
@@ -39,4 +39,4 @@ jobs:
     - name: Build
       run: cd build && cmake --build . --config Release
     - name: Run unit tests
-      run: "build/Release/SlotMapTest.exe"
+      run: "build/Release/SlotMapTest.exe --gtest_filter=-SlotMapTest.*_Slow"
