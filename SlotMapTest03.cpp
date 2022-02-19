@@ -92,7 +92,6 @@ TEST(SlotMapTest, BasicIterators2)
     EXPECT_EQ(numSteps, 4);
 }
 
-
 TEST(SlotMapTest, BasicIterators3)
 {
     dod::slot_map<CustomType> slotMap;

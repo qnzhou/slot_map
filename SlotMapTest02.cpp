@@ -3,8 +3,6 @@
 #include <slot_map.h>
 #include <unordered_set>
 
-
-
 // Note: You could skip slow tests by using "SlotMapTest --gtest_filter=-SlotMapTest.*_Slow"
 TEST(SlotMapTest, IdCollisions_Slow)
 {
@@ -75,7 +73,7 @@ TEST(SlotMapTest, IdCollisions_Slow)
     printf("\n");
     printf("Num allocations: %d\n", int(numAllocationsChecked));
 
-    auto id = slotMap.emplace(33);
+    slotMap.emplace(33);
     EXPECT_EQ(slotMap.size(), 1u);
 
     for (size_t i = 0; i < ids.size(); i++)

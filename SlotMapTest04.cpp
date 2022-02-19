@@ -36,7 +36,7 @@ TEST(SlotMapTest, IdsToAssociativeContainers)
 TEST(SlotMapTest, SlotsDeactivationOnClear)
 {
     dod::slot_map<int> slotMap;
-    for (int i = 0; i < static_cast<size_t>(decltype(slotMap)::key::kMaxVersion) + 10; i++)
+    for (int i = 0; i < static_cast<int>(decltype(slotMap)::key::kMaxVersion) + 10; i++)
     {
         for (size_t k = 0; k < 128; k++)
         {

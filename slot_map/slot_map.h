@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <deque>
 #include <functional>
 #include <optional>
@@ -231,7 +232,7 @@ template <typename T> struct slot_map_key
   https://gamesfromwithin.com/managing-data-relationships
 
   Stefan Reinalter
-  Adventures in data-oriented design – Part 3c: External References, 2013
+  Adventures in data-oriented design - Part 3c: External References, 2013
   https://blog.molecular-matters.com/2013/07/24/adventures-in-data-oriented-design-part-3c-external-references/
 
   Niklas Gray
@@ -388,8 +389,11 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
     static inline size_type align(size_type cursor, size_type alignment) noexcept { return (cursor + (alignment - 1)) & ~(alignment - 1); }
     static inline bool isPointerAligned(void* cursor, size_t alignment) noexcept { return (uintptr_t(cursor) & (alignment - 1)) == 0; }
 
-    template <typename T, class... Args> static void construct(void* mem, Args&&... args) { new (mem) T(std::forward<Args>(args)...); }
-    template <typename T> void destruct(T* p) { p->~T(); }
+    template <typename TYPE, class... Args> static void construct(void* mem, Args&&... args)
+    {
+        new (mem) TYPE(std::forward<Args>(args)...);
+    }
+    template <typename TYPE> void destruct(TYPE* p) { p->~T(); }
 
     const T* getImpl(key k) const noexcept
     {
@@ -453,9 +457,9 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
         size_type index;
     };
 
-    template <typename T> inline static constexpr bool isPow2(T x) noexcept
+    template <typename INTEGRAL_TYPE> inline static constexpr bool isPow2(INTEGRAL_TYPE x) noexcept
     {
-        static_assert(std::is_integral<T>::value, "isPow2 must be called on an integer type.");
+        static_assert(std::is_integral<INTEGRAL_TYPE>::value, "isPow2 must be called on an integer type.");
         return (x & (x - 1)) == 0 && (x != 0);
     }
 
@@ -686,9 +690,9 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
         m.tombstone = 1;
 
         ValueStorage& v = getValueByAddr(addr);
-        const T* pv = reinterpret_cast<const T*>(&v);
         if constexpr (!std::is_trivially_destructible<T>::value)
         {
+            const T* pv = reinterpret_cast<const T*>(&v);
             destruct(pv);
         }
         numItems--;
@@ -1063,7 +1067,33 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
     class const_kv_iterator
     {
       public:
-        using KeyValue = std::pair<slot_map_key<T>, std::reference_wrapper<const T>>;
+        // pretty much similar to std::reference_wrapper
+        template <typename TYPE> struct reference
+        {
+            TYPE* ptr = nullptr;
+
+            explicit reference(TYPE* _ptr)
+                : ptr(_ptr)
+            {
+            }
+
+            reference(const reference& /*other*/) noexcept = default;
+            reference(reference&& /*other*/) noexcept = default;
+            reference& operator=(const reference& /*other*/) noexcept = default;
+            reference& operator=(reference&& /*other*/) noexcept = default;
+
+            void set(TYPE* _ptr) noexcept { ptr = _ptr; }
+
+            TYPE& get() const noexcept
+            {
+                SLOT_MAP_ASSERT(ptr);
+                return *ptr;
+            }
+
+            operator TYPE&() const noexcept { return get(); }
+        };
+
+        using KeyValue = std::pair<slot_map_key<T>, const reference<const T>>;
 
       private:
         void updateTmpKV() const noexcept
@@ -1075,14 +1105,15 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
             const ValueStorage& v = slotMap->getValueByAddr(addr);
             const T* value = reinterpret_cast<const T*>(&v);
             tmpKv.first = key::make(m.version, currentIndex);
-            tmpKv.second = std::cref(*value);
+            const reference<const T>& ref = tmpKv.second;
+            const_cast<reference<const T>&>(ref).set(value);
         }
 
       public:
         explicit const_kv_iterator(const slot_map* _slotMap, size_type index) noexcept
             : slotMap(_slotMap)
             , currentIndex(index)
-            , tmpKv(key::invalid(), std::cref(*reinterpret_cast<const T*>(nullptr)))
+            , tmpKv(key::invalid(), reference<const T>(nullptr))
         {
         }
 

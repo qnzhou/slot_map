@@ -246,7 +246,7 @@ TEST(SlotMapTest, CheckCtorsDtors)
         EXPECT_EQ(dtorCount, 0);
         dod::slot_map<Counter> slotMap;
 
-        auto id1 = slotMap.emplace();
+        slotMap.emplace();
         auto id2 = slotMap.emplace();
         auto id3 = slotMap.emplace();
         EXPECT_EQ(ctorCount, 3);
@@ -261,9 +261,9 @@ TEST(SlotMapTest, CheckCtorsDtors)
         EXPECT_EQ(ctorCount, 3);
         EXPECT_EQ(dtorCount, 3);
 
-        auto id4 = slotMap.emplace();
-        auto id5 = slotMap.emplace();
-        auto id6 = slotMap.emplace();
+        slotMap.emplace();
+        slotMap.emplace();
+        slotMap.emplace();
         EXPECT_EQ(ctorCount, 6);
         EXPECT_EQ(dtorCount, 3);
     }
@@ -303,7 +303,7 @@ TEST(SlotMapTest, CheckMoves)
         EXPECT_EQ(moveCount2, 0);
         dod::slot_map<Counter2> slotMap;
 
-        auto id1 = slotMap.emplace();
+        slotMap.emplace();
         auto id2 = slotMap.emplace();
         auto id3 = slotMap.emplace();
         EXPECT_EQ(ctorCount2, 3);
@@ -342,9 +342,9 @@ TEST(SlotMapTest, CheckMoves)
         EXPECT_EQ(dtorCount2, 5);
         EXPECT_EQ(moveCount2, 2);
 
-        auto id4 = slotMap.emplace();
-        auto id5 = slotMap.emplace();
-        auto id6 = slotMap.emplace();
+        slotMap.emplace();
+        slotMap.emplace();
+        slotMap.emplace();
         EXPECT_EQ(ctorCount2, 6);
         EXPECT_EQ(dtorCount2, 5);
         EXPECT_EQ(moveCount2, 2);
