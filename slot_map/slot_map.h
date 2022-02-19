@@ -367,14 +367,13 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
             size_type dataSize = static_cast<size_type>(sizeof(ValueStorage)) * kPageSize;
             size_type alignedDataSize = align(dataSize, static_cast<size_type>(alignof(Meta)));
             size_type align = std::max(static_cast<size_type>(alignof(Meta)), static_cast<size_type>(alignof(ValueStorage)));
+            // some platforms (macOS) does not support alignments smaller than `alignof(void*)`
+            // and 16 bytes seem like a nice compromise 
+            align = std::min(align, 16u);
             size_type numBytes = alignedDataSize + metaSize;
 
             SLOT_MAP_ASSERT((numBytes % align) == 0);
             rawMemory = SLOT_MAP_ALLOC(static_cast<size_t>(numBytes), static_cast<size_t>(align));
-            if (!rawMemory)
-            {
-                printf("Memory allocation failed! %d, align: %d\n", int(numBytes), int(align));
-            }
             SLOT_MAP_ASSERT(rawMemory);
 
             numInactiveSlots = 0;
