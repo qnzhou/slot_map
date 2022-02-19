@@ -56,7 +56,7 @@ template <class T, size_t Alignment = alignof(T)> struct Allocator
     };
 
     Allocator() noexcept {}
-    Allocator(const Allocator& other) noexcept {}
+    Allocator(const Allocator& /*other*/) noexcept {}
 
     template <typename U> Allocator(const Allocator<U, Alignment>& /* other */) noexcept {}
 
