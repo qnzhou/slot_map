@@ -366,14 +366,22 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
             size_type metaSize = static_cast<size_type>(sizeof(Meta)) * kPageSize;
             size_type dataSize = static_cast<size_type>(sizeof(ValueStorage)) * kPageSize;
             size_type alignedDataSize = align(dataSize, static_cast<size_type>(alignof(Meta)));
-            size_type align = std::max(static_cast<size_type>(alignof(Meta)), static_cast<size_type>(alignof(ValueStorage)));
+            size_type alignment = std::max(static_cast<size_type>(alignof(Meta)), static_cast<size_type>(alignof(ValueStorage)));
             // some platforms (macOS) does not support alignments smaller than `alignof(void*)`
-            // and 16 bytes seem like a nice compromise 
-            align = std::max(align, 16u);
+            // and 16 bytes seem like a nice compromise
+            alignment = std::max(alignment, 16u);
             size_type numBytes = alignedDataSize + metaSize;
 
-            SLOT_MAP_ASSERT((numBytes % align) == 0);
-            rawMemory = SLOT_MAP_ALLOC(static_cast<size_t>(numBytes), static_cast<size_t>(align));
+            /*
+              C++11 std::aligned_alloc
+
+              Passing a size which is not an integral multiple of alignment or an alignment which is not valid or not supported by the
+              implementation causes the function to fail and return a null pointer (C11, as published, specified undefined behavior in
+              this case, this was corrected by DR 460)
+            */
+            numBytes = align(numBytes, alignment);
+            SLOT_MAP_ASSERT((numBytes % alignment) == 0);
+            rawMemory = SLOT_MAP_ALLOC(static_cast<size_t>(numBytes), static_cast<size_t>(alignment));
             SLOT_MAP_ASSERT(rawMemory);
 
             numInactiveSlots = 0;
