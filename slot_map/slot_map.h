@@ -369,7 +369,7 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
             size_type align = std::max(static_cast<size_type>(alignof(Meta)), static_cast<size_type>(alignof(ValueStorage)));
             // some platforms (macOS) does not support alignments smaller than `alignof(void*)`
             // and 16 bytes seem like a nice compromise 
-            align = std::min(align, 16u);
+            align = std::max(align, 16u);
             size_type numBytes = alignedDataSize + metaSize;
 
             SLOT_MAP_ASSERT((numBytes % align) == 0);
