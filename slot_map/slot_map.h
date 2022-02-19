@@ -371,6 +371,10 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
 
             SLOT_MAP_ASSERT((numBytes % align) == 0);
             rawMemory = SLOT_MAP_ALLOC(static_cast<size_t>(numBytes), static_cast<size_t>(align));
+            if (!rawMemory)
+            {
+                printf("Memory allocation failed! %d, align: %d\n", int(numBytes), int(align));
+            }
             SLOT_MAP_ASSERT(rawMemory);
 
             numInactiveSlots = 0;
