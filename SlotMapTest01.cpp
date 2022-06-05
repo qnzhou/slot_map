@@ -163,7 +163,7 @@ TEST(SlotMapTest, NonTrivialCtorDtor)
     EXPECT_EQ(_r7.has_value(), false);
 }
 
-TEST(SlotMapTest, UserData)
+TEST(SlotMapTest, TagTest)
 {
     dod::slot_map<int> slotMap;
     EXPECT_EQ(slotMap.size(), 0u);
@@ -177,15 +177,15 @@ TEST(SlotMapTest, UserData)
     EXPECT_TRUE(slotMap.has_key(id1));
     EXPECT_TRUE(slotMap.has_key(id2));
 
-    id1.setUserData(12345);
-    id2.setUserData(67890);
+    id1.set_tag(12345);
+    id2.set_tag(67890);
 
     EXPECT_TRUE(slotMap.has_key(id1));
     EXPECT_TRUE(slotMap.has_key(id2));
 
-    auto ud1 = id1.getUserData();
+    auto ud1 = id1.get_tag();
     EXPECT_EQ(ud1, 12345u);
-    auto ud2 = id2.getUserData();
+    auto ud2 = id2.get_tag();
     EXPECT_EQ(ud2, 67890u);
 }
 

@@ -113,7 +113,7 @@ template <typename T> struct slot_map_key
     using id_type = uint64_t;
     using version_t = uint16_t;
     using index_t = uint32_t;
-    using userdata_t = uint32_t;
+    using tag_t = uint32_t;
 
     static inline constexpr version_t kInvalidVersion = 0x0u;
     static inline constexpr version_t kMinVersion = 0x1u;
@@ -122,7 +122,7 @@ template <typename T> struct slot_map_key
     /*
       ID structure   |  num_bits
      ----------------+----------------------
-      user-data      |  24
+      tag            |  24
       version(tag)   |  16 (0..65,535)
       index          |  24 (0..16,777,215)
     */
@@ -131,8 +131,8 @@ template <typename T> struct slot_map_key
     static inline constexpr id_type kVersionMask = 0xffff000000ull;
     static inline constexpr id_type kVersionShift = 24ull;
 
-    static inline constexpr id_type kHandleUserDataMask = 0xffffff0000000000ull;
-    static inline constexpr id_type kHandleUserDataShift = 40ull;
+    static inline constexpr id_type kHandleTagMask = 0xffffff0000000000ull;
+    static inline constexpr id_type kHandleTagShift = 40ull;
 
     static inline slot_map_key make(version_t version, index_t index)
     {
@@ -145,11 +145,11 @@ template <typename T> struct slot_map_key
 
     inline size_t hash() const noexcept { return std::hash<id_type>{}(raw); }
 
-    static inline slot_map_key clearUserDataAndUpdateVersion(slot_map_key key, version_t version) noexcept
+    static inline slot_map_key clearTagAndUpdateVersion(slot_map_key key, version_t version) noexcept
     {
         SLOT_MAP_ASSERT(version != kInvalidVersion);
         id_type ver = (static_cast<id_type>(version) << kVersionShift) & kVersionMask;
-        return slot_map_key{((key.raw & (~kVersionMask)) | ver) & (~kHandleUserDataMask)};
+        return slot_map_key{((key.raw & (~kVersionMask)) | ver) & (~kHandleTagMask)};
     }
     static inline index_t toIndex(slot_map_key key) noexcept { return static_cast<index_t>(key.raw & kIndexMask); }
     static inline version_t toVersion(slot_map_key key) noexcept
@@ -158,12 +158,12 @@ template <typename T> struct slot_map_key
     }
     static inline version_t increaseVersion(version_t version) noexcept { return (version + 1); }
 
-    inline userdata_t getUserData() const noexcept { return static_cast<userdata_t>((raw & kHandleUserDataMask) >> kHandleUserDataShift); }
-    inline void setUserData(userdata_t userData) noexcept
+    inline tag_t get_tag() const noexcept { return static_cast<tag_t>((raw & kHandleTagMask) >> kHandleTagShift); }
+    inline void set_tag(tag_t tag) noexcept
     {
-        SLOT_MAP_ASSERT(userData <= 0xffffff);
-        id_type ud = (static_cast<id_type>(userData) << kHandleUserDataShift) & kHandleUserDataMask;
-        raw = ((raw & (~kHandleUserDataMask)) | ud);
+        SLOT_MAP_ASSERT(tag <= 0xffffff);
+        id_type ud = (static_cast<id_type>(tag) << kHandleTagShift) & kHandleTagMask;
+        raw = ((raw & (~kHandleTagMask)) | ud);
     }
 
     slot_map_key() noexcept = default;
@@ -265,7 +265,7 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
     using key = slot_map_key<T>;
     using version_t = typename slot_map_key<T>::version_t;
     using index_t = typename slot_map_key<T>::index_t;
-    using userdata_t = typename slot_map_key<T>::userdata_t;
+    using tag_t = typename slot_map_key<T>::tag_t;
     using size_type = uint32_t;
 
     /*
@@ -389,7 +389,8 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
             values = reinterpret_cast<ValueStorage*>(rawMemory);
             meta = reinterpret_cast<Meta*>(reinterpret_cast<char*>(rawMemory) + alignedDataSize);
 
-            SLOT_MAP_ASSERT(rawMemory);
+             // TODO: remove rawMemory member
+	    SLOT_MAP_ASSERT(values == rawMemory);
             SLOT_MAP_ASSERT(values);
             SLOT_MAP_ASSERT(meta);
             SLOT_MAP_ASSERT(isPointerAligned(values, alignof(ValueStorage)));
@@ -720,8 +721,8 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
         }
         else
         {
-            // recycle index id (note: user data is not saved!)
-            freeIndices.emplace_back(key::clearUserDataAndUpdateVersion(k, slotVersion));
+            // recycle index id (note: tag is not saved!)
+            freeIndices.emplace_back(key::clearTagAndUpdateVersion(k, slotVersion));
         }
         return EraseResult::ErasedAndIndexRecycled;
     }
@@ -841,7 +842,7 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
             Meta& m = getMetaByAddr(addr);
             SLOT_MAP_ASSERT(m.inactive == 0);
             SLOT_MAP_ASSERT(m.tombstone != 0);
-            SLOT_MAP_ASSERT(k.getUserData() == 0);
+            SLOT_MAP_ASSERT(k.get_tag() == 0);
 
             m.tombstone = 0;
 
