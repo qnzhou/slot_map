@@ -123,7 +123,7 @@ template <typename T> struct slot_map_key
       ID structure   |  num_bits
      ----------------+----------------------
       tag            |  24
-      version(tag)   |  16 (0..65,535)
+      version        |  16 (0..65,535)
       index          |  24 (0..16,777,215)
     */
     static inline constexpr id_type kIndexMask = 0xffffffull;
@@ -184,14 +184,12 @@ template <typename T> struct slot_map_key
 };
 
 /*
-  A slot map a consistent high performance associative container with persistent unique keys to access stored values.
-  Upon insertion a key is returned that can be used to later access or remove the values.
-  Insertion, removal and access all guaranteed to take O(1) time (best, worst and average case)
-  Great for storing collections of objects that need stable, safe references but have no clear ownership.
+  A slot map is a high-performance associative container with persistent unique keys to access stored values. Upon insertion, a key is
+  returned that can be used to later access or remove the values. Insertion, removal, and access are all guaranteed to take O(1) time (best,
+  worst, and average case) Great for storing collections of objects that need stable, safe references but have no clear ownership.
 
-  The difference between a std::unordered_map and a slot map is that the slot map generates and returns the key when inserting a value.
-  A key is always unique and will only refer to the value that was inserted.
-
+  The difference between a std::unordered_map and a slot map is that the slot map generates and returns the key when inserting a value. A key
+  is always unique and will only refer to the value that was inserted.
 
   Usage example:
   ```
