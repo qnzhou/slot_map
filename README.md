@@ -40,7 +40,7 @@ The slot map container will allocate memory in pages (default page size = 4096 e
 Also, the page-based memory allocator is very important since it guarantees "pointers stability"; hence, we never move values in memory.
 
 
-Keys are always uses `uint64_t` type and technically typless, but we "artificially" make them typed to get a few extra compile-time checks.
+Keys are always uses `uint64_t` type and technically typless, but we "artificially" make them typed to get a few extra compile-time checks.  
 i.e., the following code will produce a compiler error
 ```cpp
 slot_map<std::string> strings;
@@ -79,6 +79,14 @@ Here is how internal key structure is look like
 | version        |  16 (0..65,535)     |
 | index          |  24 (0..16,777,215) |
 
+
+Note: To use your custom memory allocator it is enough to define `SLOT_MAP_ALLOC`/`SLOT_MAP_FREE` before including `"slot_map.h"`
+
+```cpp
+#define SLOT_MAP_ALLOC(sizeInBytes, alignment) aligned_alloc(alignment, sizeInBytes)
+#define SLOT_MAP_FREE(ptr) free(ptr)
+#include "slot_map.h"
+```
 
 
 # API
