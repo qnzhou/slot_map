@@ -734,7 +734,7 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
     ~slot_map() { callDtors(); }
 
     /*
-      Returns true if the slot map contains as specific key
+      Returns true if the slot map contains a specific key
     */
     bool has_key(key k) const noexcept
     {
