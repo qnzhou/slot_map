@@ -59,7 +59,7 @@ To mitigate this potential issue, once the version counter overflows, we disable
 To prevent version overflow from happening too often, we need to ensure that we don't reuse the same slot too often.
 So we do not reuse recently freed slot-indices as long as their number is below a certain threshold (`kMinFreeIndices = 64`).
 
-Keys can also carry on an extra 24 bits of information called `tag` provided by a user. That might be handy to add application-specific data to keys.
+Keys also can carry an extra 24 bits of information provided by a user called `tag`. That might be handy to add application-specific data to keys.
 
 For example:
 ```cpp
