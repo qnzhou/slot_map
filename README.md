@@ -37,7 +37,7 @@ The difference between a `std::unordered_map` and a `dod::slot_map` is that the 
 # Implementation details
 
 The slot map container will allocate memory in pages (default page size = 4096 elements) to avoid memory spikes during growth and be able to deallocate pages that are no longer needed.
-Also, the page-based memory allocator is very important since it guarantees "pointers stability"; hence, values never move in memory.
+Also, the page-based memory allocator is very important since it guarantees "pointers stability"; hence, we never move values in memory.
 
 
 Keys are always uses `uint64_t` type and technically typless, but we "artificially" make them typed to get a few extra compile-time checks.
