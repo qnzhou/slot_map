@@ -5,9 +5,9 @@
 [![codecov](https://codecov.io/gh/SergeyMakeev/slot_map/branch/main/graph/badge.svg?token=3GRAFTRYQU)](https://codecov.io/gh/SergeyMakeev/slot_map)
 ![MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
-A slot map is a high-performance associative container with persistent unique keys to access stored values. Upon insertion, a key is returned that can be used to later access or remove the values. Insertion, removal, and access are all guaranteed to take O(1) time (best, worst, and average case) Great for storing collections of objects that need stable, safe references but have no clear ownership.
+A Slot Map is a high-performance associative container with persistent unique keys to access stored values. Upon insertion, a key is returned that can be used to later access or remove the values. Insertion, removal, and access are all guaranteed to take O(1) time (best, worst, and average case) Great for storing collections of objects that need stable, safe references but have no clear ownership.
 
-The difference between a std::unordered_map and a slot map is that the slot map generates and returns the key when inserting a value. A key is always unique and will only refer to the value that was inserted.
+The difference between a `std::unordered_map` and a `dod::slot_map` is that the slot map generates and returns the key when inserting a value. A key is always unique and will only refer to the value that was inserted.
 
   Usage example:
   ```cpp
@@ -36,11 +36,11 @@ The difference between a std::unordered_map and a slot map is that the slot map 
   
 # Implementation details
 
-The slot map container will allocate memory in pages (default page size = 4096 elements and configurable) to avoid memory spikes during growth and be able to deallocate pages that are no longer needed.
+The slot map container will allocate memory in pages (default page size = 4096 elements) to avoid memory spikes during growth and be able to deallocate pages that are no longer needed.
 Also, the page-based memory allocator is very important since it guarantees "pointers stability"; hence, values never move in memory.
 
 
-Keys are always uses `uint64_t` type and technically typless, but we artificially make them typed to get extra compiler checks.
+Keys are always uses `uint64_t` type and technically typless, but we "artificially" make them typed to get a few extra compile-time checks.
 i.e., the following code will produce a compiler error
 ```cpp
 slot_map<std::string> strings;
@@ -49,15 +49,15 @@ slot_map<int>::key numKey =  numbers.emplace(3);
 const std::string* value = strings.get(numKey);   //  <---- can not use slot_map<int>::key to index slot_map<std::string> !
 ```
 
-When a slot is reused, its version is automatically incremented (to make all existing keys that refers to that slot invalid).
-But since we only use 16-bits for as version counter, there is a possibility that the version counter will wrap around,
+When a slot is reused, its version is automatically incremented (to invalidate all existing keys that refers to the same slot).
+But since we only use 16-bits for version counter, there is a possibility that the version counter will wrap around,
 and a new item will get the same key as a removed item.
 
-Once the version counter overflows, we disable that slot so that no new keys are returned for this slot
+To mitigate this potential issue, once the version counter overflows, we disable that slot so that no new keys are returned for this slot
 (this gives us a guarantee that there are no key collisions)
 
 To prevent version overflow from happening too often, we need to ensure that we don't reuse the same slot too often.
-So we do not reuse indices as long as their number is below a certain threshold (`kMinFreeIndices = 64`).
+So we do not reuse recently freed slot-indices as long as their number is below a certain threshold (`kMinFreeIndices = 64`).
 
 Keys can also carry on an extra 24 bits of information called `tag` provided by a user. That might be handy to add application-specific data to keys.
 
