@@ -91,7 +91,76 @@ Note: To use your custom memory allocator it is enough to define `SLOT_MAP_ALLOC
 
 # API
   
-  todo
+`bool has_key(key k) const noexcept`  
+Returns true if the slot map contains a specific key  
+    
+`void reset()`  
+Clears the slot map and releases any allocated memory.  
+Note: By calling this function, you must guarantee that no handles are in use!  
+Otherwise calling this function might be dangerous and lead to key "collisions".  
+You might consider using "clear()" instead.  
+  
+`void clear()`  
+Clears the slot map but keeps the allocated memory for reuse.  
+Automatically increases version for all the removed elements (the same as calling "erase()" for all existing elements)  
+      
+`const T* get(key k) const noexcept`  
+If key exists returns a const pointer to the value corresponding to the given key or returns null elsewere.  
+      
+`T* get(key k)`  
+If key exists returns a pointer to the value corresponding to the given key or returns null elsewere.  
+      
+`key emplace(Args&&... args)`  
+Constructs element in-place and returns a unique key that can be used to access this value.  
+      
+`void erase(key k)`  
+Removes element (if such key exists) from the slot map.  
+      
+`std::optional<T> pop(key k)`  
+Removes element (if such key exists) from the slot map, returning the value at the key if the key was not previously removed.  
+      
+`bool empty() const noexcept`  
+Returns true if the slot map is empty.  
+   
+`size_type size() const noexcept`  
+Returns the number of elements in the slot map.  
+
+`void swap(slot_map& other) noexcept`
+Exchanges the content of the slot map by the content of another slot map object of the same type.  
+  
+`slot_map(const slot_map& other)`  
+Copy constructor  
+
+`slot_map& operator=(const slot_map& other)`  
+Copy assignment  
+
+`slot_map(slot_map&& other) noexcept`  
+Move constructor
+
+`slot_map& operator=(slot_map&& other) noexcept`
+Move asignment
+
+
+`const_values_iterator begin() const noexcept`
+`const_values_iterator end() const noexcept`
+Const values iterator
+
+```cpp
+for (const auto& value : slotMap)
+{
+ ...
+}
+```
+
+`Items items() const noexcept`
+Const key/value iterator
+
+```cpp
+for (const auto& [key, value] : slotMap.items())
+{
+...
+}
+```
   
 # References
   
