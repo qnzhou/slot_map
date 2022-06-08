@@ -167,6 +167,7 @@ template <typename T> struct slot_map_key
     }
 
     slot_map_key() noexcept = default;
+    slot_map_key(id_type raw) noexcept : raw(raw) { }
     slot_map_key(const slot_map_key&) noexcept = default;
     slot_map_key& operator=(const slot_map_key&) noexcept = default;
     slot_map_key(slot_map_key&&) noexcept = default;
