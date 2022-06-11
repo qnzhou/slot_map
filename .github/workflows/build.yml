@@ -21,7 +21,7 @@ jobs:
     - name: CMake Configure
       run: mkdir build && cd build && cmake ..
     - name: Build
-      run: cd build && cmake --build . --config Release
+      run: cd build && cmake --build . --config Debug
     - name: Run unit tests
       run: cd build && ./SlotMapTest --gtest_filter=-SlotMapTest.*_Slow
   build-windows:
