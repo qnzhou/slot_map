@@ -4,7 +4,7 @@
 
 TEST(SlotMapTest, BasicIterators)
 {
-    dod::slot_map<int, 32, 0> slotMap;
+    dod::slot_map64<int, 32, 0> slotMap;
 
     // allocate and remove some IDs (to waste a few allocation pages)
     for (size_t i = 0; i < static_cast<size_t>(decltype(slotMap)::kPageSize) * 2; i++)

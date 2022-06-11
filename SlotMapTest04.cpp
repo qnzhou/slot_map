@@ -4,12 +4,12 @@
 #include <unordered_map>
 
 // Note: You could run "SlotMapTest --gtest_filter=SlotMapTest.PageDeactivationOnClear" if you need to run only a specific test
-TEST(SlotMapTest, IdsToAssociativeContainers)
+TEST(SlotMapTest, IdsToAssociativeContainers64)
 {
-    dod::slot_map<int> slotMap;
+    dod::slot_map64<int> slotMap;
 
-    std::unordered_map<dod::slot_map<int>::key, int> unorderedMap;
-    std::map<dod::slot_map<int>::key, int> map;
+    std::unordered_map<dod::slot_map64<int>::key, int> unorderedMap;
+    std::map<dod::slot_map64<int>::key, int> map;
 
     for (int i = 0; i < 128; i++)
     {
@@ -33,6 +33,36 @@ TEST(SlotMapTest, IdsToAssociativeContainers)
     }
 }
 
+TEST(SlotMapTest, IdsToAssociativeContainers32)
+{
+    dod::slot_map32<int> slotMap;
+
+    std::unordered_map<dod::slot_map32<int>::key, int> unorderedMap;
+    std::map<dod::slot_map32<int>::key, int> map;
+
+    for (int i = 0; i < 128; i++)
+    {
+        auto id = slotMap.emplace(i);
+        unorderedMap.emplace(std::make_pair(id, i));
+        map.emplace(std::make_pair(id, i));
+    }
+    EXPECT_EQ(slotMap.size(), 128u);
+    EXPECT_EQ(unorderedMap.size(), size_t(128));
+    EXPECT_EQ(map.size(), size_t(128));
+
+    for (const auto& [key, value] : slotMap.items())
+    {
+        auto uit = unorderedMap.find(key);
+        ASSERT_NE(uit, unorderedMap.end());
+        ASSERT_EQ(uit->second, value);
+
+        auto it = map.find(key);
+        ASSERT_NE(it, map.end());
+        ASSERT_EQ(it->second, value);
+    }
+}
+
+
 TEST(SlotMapTest, SlotsDeactivationOnClear)
 {
     dod::slot_map<int> slotMap;
@@ -52,7 +82,7 @@ TEST(SlotMapTest, SlotsDeactivationOnClear)
 
 TEST(SlotMapTest, PageDeactivationOnClear)
 {
-    dod::slot_map<int, 32, 0> slotMap;
+    dod::slot_map64<int, 32, 0> slotMap;
     size_t numIterations = static_cast<size_t>(decltype(slotMap)::key::kMaxVersion) + 10;
     for (size_t j = 0; j < numIterations; j++)
     {
@@ -114,7 +144,7 @@ TEST(SlotMapTest, InvalidAndMalformedKeys)
 
 TEST(SlotMapTest, WorkingWithRemovedPages)
 {
-    dod::slot_map<int, 32, 0> slotMap;
+    dod::slot_map64<int, 32, 0> slotMap;
 
     auto id = slotMap.emplace(33);
     slotMap.erase(id);

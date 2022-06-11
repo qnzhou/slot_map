@@ -9,9 +9,67 @@ void _onAssertionFailed(const char* expression, const char* srcFile, unsigned in
 }
 */
 
-TEST(SlotMapTest, BasicTest)
+TEST(SlotMapTest, BasicTest64)
 {
-    dod::slot_map<int> slotMap;
+    dod::slot_map64<int> slotMap;
+    EXPECT_EQ(slotMap.size(), 0u);
+
+    auto id1 = slotMap.emplace(1);
+    EXPECT_EQ(slotMap.size(), 1u);
+
+    auto id2 = slotMap.emplace(2);
+    EXPECT_EQ(slotMap.size(), 2u);
+
+    auto id3 = slotMap.emplace(3);
+    EXPECT_EQ(slotMap.size(), 3u);
+
+    auto id4 = slotMap.emplace(4);
+    EXPECT_EQ(slotMap.size(), 4u);
+
+    auto id5 = slotMap.emplace(5);
+    EXPECT_EQ(slotMap.size(), 5u);
+
+    const int* v1 = slotMap.get(id1);
+    EXPECT_NE(v1, nullptr);
+    EXPECT_EQ(*v1, 1);
+
+    const int* v2 = slotMap.get(id2);
+    EXPECT_NE(v2, nullptr);
+    EXPECT_EQ(*v2, 2);
+
+    const int* v3 = slotMap.get(id3);
+    EXPECT_NE(v3, nullptr);
+    EXPECT_EQ(*v3, 3);
+
+    const int* v4 = slotMap.get(id4);
+    EXPECT_NE(v4, nullptr);
+    EXPECT_EQ(*v4, 4);
+
+    const int* v5 = slotMap.get(id5);
+    EXPECT_NE(v5, nullptr);
+    EXPECT_EQ(*v5, 5);
+
+    slotMap.erase(id1);
+    EXPECT_EQ(slotMap.size(), 4u);
+
+    slotMap.erase(id2);
+    EXPECT_EQ(slotMap.size(), 3u);
+
+    slotMap.erase(id3);
+    EXPECT_EQ(slotMap.size(), 2u);
+
+    slotMap.erase(id4);
+    EXPECT_EQ(slotMap.size(), 1u);
+
+    slotMap.erase(id5);
+    EXPECT_EQ(slotMap.size(), 0u);
+
+    slotMap.clear();
+}
+
+TEST(SlotMapTest, BasicTest32)
+{
+    dod::slot_map32<int> slotMap;
     EXPECT_EQ(slotMap.size(), 0u);
 
     auto id1 = slotMap.emplace(1);
@@ -163,9 +221,9 @@ TEST(SlotMapTest, NonTrivialCtorDtor)
     EXPECT_EQ(_r7.has_value(), false);
 }
 
-TEST(SlotMapTest, TagTest)
+TEST(SlotMapTest, TagTest64)
 {
-    dod::slot_map<int> slotMap;
+    dod::slot_map64<int> slotMap;
     EXPECT_EQ(slotMap.size(), 0u);
 
     auto id1 = slotMap.emplace(1);
@@ -189,12 +247,47 @@ TEST(SlotMapTest, TagTest)
     EXPECT_EQ(ud2, 67890u);
 }
 
-TEST(SlotMapTest, KeyImplicitConversionToNumber)
+TEST(SlotMapTest, TagTest32)
 {
-    auto key = dod::slot_map_key<int>::invalid();
+    dod::slot_map32<int> slotMap;
+    EXPECT_EQ(slotMap.size(), 0u);
+
+    auto id1 = slotMap.emplace(1);
+    EXPECT_EQ(slotMap.size(), 1u);
+
+    auto id2 = slotMap.emplace(2);
+    EXPECT_EQ(slotMap.size(), 2u);
+
+    EXPECT_TRUE(slotMap.has_key(id1));
+    EXPECT_TRUE(slotMap.has_key(id2));
+
+    id1.set_tag(1);
+    id2.set_tag(3);
+
+    EXPECT_TRUE(slotMap.has_key(id1));
+    EXPECT_TRUE(slotMap.has_key(id2));
+
+    auto ud1 = id1.get_tag();
+    EXPECT_EQ(ud1, 1u);
+    auto ud2 = id2.get_tag();
+    EXPECT_EQ(ud2, 3u);
+}
+
+
+TEST(SlotMapTest, KeyImplicitConversionToNumber64)
+{
+    auto key = dod::slot_map_key64<int>::invalid();
     uint64_t test = key;
     EXPECT_EQ(test, 0ull);
 }
+
+TEST(SlotMapTest, KeyImplicitConversionToNumber32)
+{
+    auto key = dod::slot_map_key32<int>::invalid();
+    uint32_t test = key;
+    EXPECT_EQ(test, 0ull);
+}
+
 
 void testFunction(dod::slot_map<std::string>::key k, const dod::slot_map<std::string>& slotMap)
 {
@@ -623,8 +716,8 @@ TEST(SlotMapTest, CopyCtor)
 
 TEST(SlotMapTest, CopyAssignmentWithInactivePages)
 {
-    dod::slot_map<std::string, 32, 0> slotMapA;
-    dod::slot_map<std::string, 32, 0> slotMapB;
+    dod::slot_map64<std::string, 32, 0> slotMapA;
+    dod::slot_map64<std::string, 32, 0> slotMapB;
 
     // allocate and remove some IDs (to waste a few allocation pages)
     for (size_t i = 0; i < static_cast<size_t>(decltype(slotMapA)::kPageSize) * 2; i++)
@@ -713,8 +806,8 @@ TEST(SlotMapTest, CopyAssignmentWithInactivePages)
 
 TEST(SlotMapTest, MoveAssignment)
 {
-    auto id1 = dod::slot_map_key<std::string>::invalid();
-    auto id2 = dod::slot_map_key<std::string>::invalid();
+    auto id1 = dod::slot_map_key64<std::string>::invalid();
+    auto id2 = dod::slot_map_key64<std::string>::invalid();
 
     dod::slot_map<std::string> slotMapB;
     {

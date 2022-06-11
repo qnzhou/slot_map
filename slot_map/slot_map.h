@@ -108,7 +108,19 @@ slot_map<int>::key numKey =  numbers.emplace(3);
 const std::string* value = strings.get(numKey);
 ```
 */
-template <typename T> struct slot_map_key
+
+/*
+
+64-bit key
+
+ID structure   |  num_bits
+----------------+----------------------
+tag            |  24
+version        |  16 (0..65,535)
+index          |  24 (0..16,777,215)
+
+*/
+template <typename T> struct slot_map_key64
 {
     using id_type = uint64_t;
     using version_t = uint16_t;
@@ -119,40 +131,31 @@ template <typename T> struct slot_map_key
     static inline constexpr version_t kMinVersion = 0x1u;
     static inline constexpr version_t kMaxVersion = 0xffffu;
 
-    /*
-      ID structure   |  num_bits
-     ----------------+----------------------
-      tag            |  24
-      version        |  16 (0..65,535)
-      index          |  24 (0..16,777,215)
-    */
     static inline constexpr id_type kIndexMask = 0xffffffull;
-
     static inline constexpr id_type kVersionMask = 0xffff000000ull;
     static inline constexpr id_type kVersionShift = 24ull;
-
     static inline constexpr id_type kHandleTagMask = 0xffffff0000000000ull;
     static inline constexpr id_type kHandleTagShift = 40ull;
 
-    static inline slot_map_key make(version_t version, index_t index)
+    static inline slot_map_key64 make(version_t version, index_t index)
     {
         SLOT_MAP_ASSERT(version != kInvalidVersion);
         SLOT_MAP_ASSERT(index <= 0xffffff);
         id_type v = (static_cast<id_type>(version) << kVersionShift) & kVersionMask;
         id_type i = (static_cast<id_type>(index)) & kIndexMask;
-        return slot_map_key{v | i};
+        return slot_map_key64{v | i};
     }
 
     inline size_t hash() const noexcept { return std::hash<id_type>{}(raw); }
 
-    static inline slot_map_key clearTagAndUpdateVersion(slot_map_key key, version_t version) noexcept
+    static inline slot_map_key64 clearTagAndUpdateVersion(slot_map_key64 key, version_t version) noexcept
     {
         SLOT_MAP_ASSERT(version != kInvalidVersion);
         id_type ver = (static_cast<id_type>(version) << kVersionShift) & kVersionMask;
-        return slot_map_key{((key.raw & (~kVersionMask)) | ver) & (~kHandleTagMask)};
+        return slot_map_key64{((key.raw & (~kVersionMask)) | ver) & (~kHandleTagMask)};
     }
-    static inline index_t toIndex(slot_map_key key) noexcept { return static_cast<index_t>(key.raw & kIndexMask); }
-    static inline version_t toVersion(slot_map_key key) noexcept
+    static inline index_t toIndex(slot_map_key64 key) noexcept { return static_cast<index_t>(key.raw & kIndexMask); }
+    static inline version_t toVersion(slot_map_key64 key) noexcept
     {
         return static_cast<version_t>((key.raw & kVersionMask) >> kVersionShift);
     }
@@ -166,20 +169,104 @@ template <typename T> struct slot_map_key
         raw = ((raw & (~kHandleTagMask)) | ud);
     }
 
-    slot_map_key() noexcept = default;
-    slot_map_key(id_type raw) noexcept : raw(raw) { }
-    slot_map_key(const slot_map_key&) noexcept = default;
-    slot_map_key& operator=(const slot_map_key&) noexcept = default;
-    slot_map_key(slot_map_key&&) noexcept = default;
-    slot_map_key& operator=(slot_map_key&&) noexcept = default;
+    slot_map_key64() noexcept = default;
+    explicit slot_map_key64(id_type raw) noexcept
+        : raw(raw)
+    {
+    }
+    slot_map_key64(const slot_map_key64&) noexcept = default;
+    slot_map_key64& operator=(const slot_map_key64&) noexcept = default;
+    slot_map_key64(slot_map_key64&&) noexcept = default;
+    slot_map_key64& operator=(slot_map_key64&&) noexcept = default;
 
-    bool operator==(const slot_map_key& other) const noexcept { return raw == other.raw; }
-    bool operator<(const slot_map_key& other) const noexcept { return raw < other.raw; }
+    bool operator==(const slot_map_key64& other) const noexcept { return raw == other.raw; }
+    bool operator<(const slot_map_key64& other) const noexcept { return raw < other.raw; }
 
     // implicit conversion to id_type (useful for printing and debug)
     operator id_type() const noexcept { return raw; }
 
-    static inline slot_map_key invalid() noexcept { return {0}; }
+    static inline slot_map_key64 invalid() noexcept { return slot_map_key64{0}; }
+
+    id_type raw;
+};
+
+/*
+
+32-bit key
+
+ID structure   |  num_bits
+----------------+----------------------
+tag            |  2
+version        |  10 (0..1023)
+index          |  20 (0..1,048,576)
+
+*/
+template <typename T> struct slot_map_key32
+{
+    using id_type = uint32_t;
+    using version_t = uint16_t;
+    using index_t = uint32_t;
+    using tag_t = uint8_t;
+
+    static inline constexpr version_t kInvalidVersion = 0x0u;
+    static inline constexpr version_t kMinVersion = 0x1u;
+    static inline constexpr version_t kMaxVersion = 0x0400u;
+
+    static inline constexpr id_type kIndexMask = 0x0fffffull;
+    static inline constexpr id_type kVersionMask = 0x3ff00000ull;
+    static inline constexpr id_type kVersionShift = 20ull;
+    static inline constexpr id_type kHandleTagMask = 0xc0000000ull;
+    static inline constexpr id_type kHandleTagShift = 30ull;
+
+    static inline slot_map_key32 make(version_t version, index_t index)
+    {
+        SLOT_MAP_ASSERT(version != kInvalidVersion);
+        SLOT_MAP_ASSERT(index <= 0xffffff);
+        id_type v = (static_cast<id_type>(version) << kVersionShift) & kVersionMask;
+        id_type i = (static_cast<id_type>(index)) & kIndexMask;
+        return slot_map_key32{v | i};
+    }
+
+    inline size_t hash() const noexcept { return std::hash<id_type>{}(raw); }
+
+    static inline slot_map_key32 clearTagAndUpdateVersion(slot_map_key32 key, version_t version) noexcept
+    {
+        SLOT_MAP_ASSERT(version != kInvalidVersion);
+        id_type ver = (static_cast<id_type>(version) << kVersionShift) & kVersionMask;
+        return slot_map_key32{((key.raw & (~kVersionMask)) | ver) & (~kHandleTagMask)};
+    }
+    static inline index_t toIndex(slot_map_key32 key) noexcept { return static_cast<index_t>(key.raw & kIndexMask); }
+    static inline version_t toVersion(slot_map_key32 key) noexcept
+    {
+        return static_cast<version_t>((key.raw & kVersionMask) >> kVersionShift);
+    }
+    static inline version_t increaseVersion(version_t version) noexcept { return (version + 1); }
+
+    inline tag_t get_tag() const noexcept { return static_cast<tag_t>((raw & kHandleTagMask) >> kHandleTagShift); }
+    inline void set_tag(tag_t tag) noexcept
+    {
+        SLOT_MAP_ASSERT(tag <= 0xffffff);
+        id_type ud = (static_cast<id_type>(tag) << kHandleTagShift) & kHandleTagMask;
+        raw = ((raw & (~kHandleTagMask)) | ud);
+    }
+
+    slot_map_key32() noexcept = default;
+    explicit slot_map_key32(id_type raw) noexcept
+        : raw(raw)
+    {
+    }
+    slot_map_key32(const slot_map_key32&) noexcept = default;
+    slot_map_key32& operator=(const slot_map_key32&) noexcept = default;
+    slot_map_key32(slot_map_key32&&) noexcept = default;
+    slot_map_key32& operator=(slot_map_key32&&) noexcept = default;
+
+    bool operator==(const slot_map_key32& other) const noexcept { return raw == other.raw; }
+    bool operator<(const slot_map_key32& other) const noexcept { return raw < other.raw; }
+
+    // implicit conversion to id_type (useful for printing and debug)
+    operator id_type() const noexcept { return raw; }
+
+    static inline slot_map_key32 invalid() noexcept { return slot_map_key32{0}; }
 
     id_type raw;
 };
@@ -189,8 +276,8 @@ template <typename T> struct slot_map_key
   returned that can be used to later access or remove the values. Insertion, removal, and access are all guaranteed to take O(1) time (best,
   worst, and average case) Great for storing collections of objects that need stable, safe references but have no clear ownership.
 
-  The difference between a std::unordered_map and a slot map is that the slot map generates and returns the key when inserting a value. A key
-  is always unique and will only refer to the value that was inserted.
+  The difference between a std::unordered_map and a slot map is that the slot map generates and returns the key when inserting a value. A
+  key is always unique and will only refer to the value that was inserted.
 
   Usage example:
   ```
@@ -258,13 +345,13 @@ template <typename T> struct slot_map_key
   Init, Update, Draw - Data Arrays, 2012
   https://greysphere.tumblr.com/post/31601463396/data-arrays
 */
-template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class slot_map
+template <typename T, typename TKeyType = slot_map_key64<T>, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class slot_map
 {
   public:
-    using key = slot_map_key<T>;
-    using version_t = typename slot_map_key<T>::version_t;
-    using index_t = typename slot_map_key<T>::index_t;
-    using tag_t = typename slot_map_key<T>::tag_t;
+    using key = TKeyType;
+    using version_t = typename TKeyType::version_t;
+    using index_t = typename TKeyType::index_t;
+    using tag_t = typename TKeyType::tag_t;
     using size_type = uint32_t;
 
     /*
@@ -388,8 +475,8 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
             values = reinterpret_cast<ValueStorage*>(rawMemory);
             meta = reinterpret_cast<Meta*>(reinterpret_cast<char*>(rawMemory) + alignedDataSize);
 
-             // TODO: remove rawMemory member
-	    SLOT_MAP_ASSERT(values == rawMemory);
+            // TODO: remove rawMemory member
+            SLOT_MAP_ASSERT(values == rawMemory);
             SLOT_MAP_ASSERT(values);
             SLOT_MAP_ASSERT(meta);
             SLOT_MAP_ASSERT(isPointerAligned(values, alignof(ValueStorage)));
@@ -484,7 +571,11 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
     }
 
     // to global index
-    static inline size_type getIndexFromAddr(PageAddr addr) noexcept { return (addr.page * kPageSize + addr.index); }
+    static inline index_t getIndexFromAddr(PageAddr addr) noexcept
+    {
+        size_type index = (addr.page * kPageSize + addr.index);
+        return index_t(index);
+    }
 
     const Meta& getMetaByAddrImpl(PageAddr addr) const noexcept
     {
@@ -553,7 +644,8 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
         SLOT_MAP_ASSERT(pages.empty());
         SLOT_MAP_ASSERT(freeIndices.empty());
 
-        static_assert(std::is_pod<Meta>::value, "Meta is expected to be memcopyable (POD type)");
+        static_assert(std::is_standard_layout<Meta>::value && std::is_trivially_copyable<Meta>::value,
+                      "Meta is expected to be memcopyable (POD type)");
 
         numItems = other.numItems;
         maxValidIndex = other.maxValidIndex;
@@ -576,7 +668,7 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
                 std::memcpy(p.meta, otherPage.meta, metaSize);
 
                 // copy data
-                if constexpr (std::is_pod<T>::value)
+                if constexpr (std::is_standard_layout<T>::value && std::is_trivially_copyable<T>::value)
                 {
                     size_type dataSize = static_cast<size_type>(sizeof(ValueStorage)) * kPageSize;
                     std::memcpy(p.values, otherPage.values, dataSize);
@@ -796,7 +888,7 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
             }
             for (size_type elementIndex = 0; elementIndex < page.numUsedElements; elementIndex++)
             {
-                size_type index = getIndexFromAddr(PageAddr{static_cast<size_type>(pageIndex), elementIndex});
+                index_t index = getIndexFromAddr(PageAddr{static_cast<size_type>(pageIndex), elementIndex});
                 // note: version doesn't matter here
                 EraseResult res = eraseImpl<false>(key::make(key::kMinVersion, index));
                 if (res == EraseResult::ErasedAndPageDeactivated)
@@ -1104,7 +1196,7 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
             operator TYPE&() const noexcept { return get(); }
         };
 
-        using KeyValue = std::pair<slot_map_key<T>, const reference<const T>>;
+        using KeyValue = std::pair<key, const reference<const T>>;
 
       private:
         void updateTmpKV() const noexcept
@@ -1115,7 +1207,7 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
             const Meta& m = slotMap->getMetaByAddr(addr);
             const ValueStorage& v = slotMap->getValueByAddr(addr);
             const T* value = reinterpret_cast<const T*>(&v);
-            tmpKv.first = key::make(m.version, currentIndex);
+            tmpKv.first = key::make(m.version, index_t(currentIndex));
             const reference<const T>& ref = tmpKv.second;
             const_cast<reference<const T>&>(ref).set(value);
         }
@@ -1204,16 +1296,28 @@ template <typename T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64> class 
     std::vector<Page, stl::Allocator<Page>> pages;
     std::deque<key, stl::Allocator<key>> freeIndices;
     size_type numItems;
-    size_type maxValidIndex;
+    index_t maxValidIndex;
 };
+
+template <class T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64>
+using slot_map32 = slot_map<T, dod::slot_map_key32<T>, PAGESIZE, MINFREEINDICES>;
+
+template <class T, size_t PAGESIZE = 4096, size_t MINFREEINDICES = 64>
+using slot_map64 = slot_map<T, dod::slot_map_key64<T>, PAGESIZE, MINFREEINDICES>;
 
 } // namespace dod
 
 // std::hash support
 namespace std
 {
-template <typename T> struct hash<typename dod::slot_map_key<T>>
+template <typename T> struct hash<typename dod::slot_map_key64<T>>
 {
-    size_t operator()(const typename dod::slot_map_key<T>& key) const noexcept { return key.hash(); }
+    size_t operator()(const typename dod::slot_map_key64<T>& key) const noexcept { return key.hash(); }
 };
+
+template <typename T> struct hash<typename dod::slot_map_key32<T>>
+{
+    size_t operator()(const typename dod::slot_map_key32<T>& key) const noexcept { return key.hash(); }
+};
+
 } // namespace std
