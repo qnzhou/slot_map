@@ -40,13 +40,22 @@ The slot map container will allocate memory in pages (default page size = 4096 e
 Also, the page-based memory allocator is very important since it guarantees "pointers stability"; hence, we never move values in memory.
 
 
-Keys are always uses `uint64_t` type and technically typless, but we "artificially" make them typed to get a few extra compile-time checks.  
+Keys are always uses `uint64_t/uint32_t` (configurable) and technically typless, but we "artificially" make them typed to get a few extra compile-time checks.  
 i.e., the following code will produce a compiler error
 ```cpp
 slot_map<std::string> strings;
 slot_map<int> numbers;
-slot_map<int>::key numKey =  numbers.emplace(3);
+slot_map<int>::key numKey = numbers.emplace(3);
 const std::string* value = strings.get(numKey);   //  <---- can not use slot_map<int>::key to index slot_map<std::string> !
+```
+
+The keys can be converted to/from their numeric types if you do not need additional type checks.
+```cpp
+slot_map<int> numbers;
+slot_map<int>::key numKey = numbers.emplace(3);
+uint64_t rawKey = numKey;  // convert to numeric type (like cast pointer to void*)
+...
+slot_map<int>::key numKey2{rawKey}; // create key from numeric type
 ```
 
 When a slot is reused, its version is automatically incremented (to invalidate all existing keys that refers to the same slot).
@@ -73,14 +82,23 @@ For example:
 
 Here is how internal key structure is look like
 
+64-bit key type
+
 | Component      |  Number of bits     |
 | ---------------|---------------------|
 | tag            |  24                 |
 | version        |  16 (0..65,535)     |
 | index          |  24 (0..16,777,215) |
 
+32-bit key type
 
-Note: To use your custom memory allocator it is enough to define `SLOT_MAP_ALLOC`/`SLOT_MAP_FREE` before including `"slot_map.h"`
+| Component      |  Number of bits     |
+| ---------------|---------------------|
+| tag            |  2                  |
+| version        |  10 (0..1023)       |
+| index          |  20 (0..1,048,576)  |
+
+Note: To use your custom memory allocator simply define `SLOT_MAP_ALLOC`/`SLOT_MAP_FREE` before including `"slot_map.h"`
 
 ```cpp
 #define SLOT_MAP_ALLOC(sizeInBytes, alignment) aligned_alloc(alignment, sizeInBytes)
