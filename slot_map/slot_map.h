@@ -39,7 +39,8 @@
 namespace stl
 {
 // STL compatible allocator
-template <class T, size_t Alignment = alignof(T)> struct Allocator
+// Note: some platforms (macOS) does not support alignments smaller than `alignof(void*)`
+template <class T, size_t Alignment = std::min(alignof(T), alignof(void*))> struct Allocator
 {
   public:
     using value_type = T;
