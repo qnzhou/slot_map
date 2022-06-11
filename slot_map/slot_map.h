@@ -40,7 +40,7 @@ namespace stl
 {
 // STL compatible allocator
 // Note: some platforms (macOS) does not support alignments smaller than `alignof(void*)`
-template <class T, size_t Alignment = std::min(alignof(T), alignof(void*))> struct Allocator
+template <class T, size_t Alignment = std::max(alignof(T), alignof(void*))> struct Allocator
 {
   public:
     using value_type = T;
@@ -68,7 +68,11 @@ template <class T, size_t Alignment = std::min(alignof(T), alignof(void*))> stru
 
     pointer allocate(size_type n, [[maybe_unused]] const void* hint = 0)
     {
-        return reinterpret_cast<pointer>(SLOT_MAP_ALLOC((sizeof(value_type) * n), Alignment));
+        size_t alignment = Alignment;
+        n = std::max(n, alignment);
+        pointer p = reinterpret_cast<pointer>(SLOT_MAP_ALLOC((sizeof(value_type) * n), alignment));
+        SLOT_MAP_ASSERT(p);
+        return p;
     }
 
     void deallocate(pointer p, size_type /* n */) { SLOT_MAP_FREE(p); }

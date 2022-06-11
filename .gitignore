@@ -4,3 +4,4 @@ build
 codecov_report
 CoverageReport*
 LastCoverageResults.log
+xcode
