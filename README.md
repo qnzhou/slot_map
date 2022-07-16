@@ -74,10 +74,10 @@ For example:
 ```cpp
   slot_map<std::string> strings;
   auto red = strings.emplace("Red");
-  red.set_tag(12345);
+  red.set_tag(13);
   
   auto tag = red.get_tag();
-  assert(tag == 12345);
+  assert(tag == 13);
 ```
 
 Here is how internal key structure is look like
