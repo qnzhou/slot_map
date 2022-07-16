@@ -5,7 +5,8 @@
 [![codecov](https://codecov.io/gh/SergeyMakeev/slot_map/branch/main/graph/badge.svg?token=3GRAFTRYQU)](https://codecov.io/gh/SergeyMakeev/slot_map)
 ![MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
-A Slot Map is a high-performance associative container with persistent unique keys to access stored values. Upon insertion, a key is returned that can be used to later access or remove the values. Insertion, removal, and access are all guaranteed to take `O(1)` time (best, worst, and average case) Great for storing collections of objects that need stable, safe references but have no clear ownership.
+A Slot Map is a high-performance associative container with persistent unique keys to access stored values. Upon insertion, a key is returned that can be used to later access or remove the values. Insertion, removal, and access are all guaranteed to take `O(1)` time (best, worst, and average case)  
+Great for storing collections of objects that need stable, safe references but have no clear ownership.
 
 The difference between a `std::unordered_map` and a `dod::slot_map` is that the slot map generates and returns the key when inserting a value. A key is always unique and will only refer to the value that was inserted.
 
