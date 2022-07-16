@@ -68,7 +68,8 @@ To mitigate this potential issue, once the version counter overflows, we disable
 To prevent version overflow from happening too often, we need to ensure that we don't reuse the same slot too often.
 So we do not reuse recently freed slot-indices as long as their number is below a certain threshold (`kMinFreeIndices = 64`).
 
-Keys also can carry a few extra bits of information provided by a user that we called `tag`. That might be handy to add application-specific data to keys.
+Keys also can carry a few extra bits of information provided by a user that we called `tag`.  
+That might be handy to add application-specific data to keys.
 
 For example:
 ```cpp
@@ -80,7 +81,7 @@ For example:
   assert(tag == 13);
 ```
 
-Here is how internal key structure is look like
+Here is how a key structure looks like internally
 
 64-bit key type
 
