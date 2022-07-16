@@ -98,7 +98,7 @@ Here is how a key structure looks like internally
 | ---------------|---------------------|
 | tag            |  2                  |
 | version        |  10 (0..1023)       |
-| index          |  20 (0..1,048,576)  |
+| index          |  20 (0..1,048,575)  |
 
 Note: To use your custom memory allocator define `SLOT_MAP_ALLOC`/`SLOT_MAP_FREE` before including `"slot_map.h"`
 
