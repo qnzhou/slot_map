@@ -235,16 +235,16 @@ TEST(SlotMapTest, TagTest64)
     EXPECT_TRUE(slotMap.has_key(id1));
     EXPECT_TRUE(slotMap.has_key(id2));
 
-    id1.set_tag(12345);
-    id2.set_tag(67890);
+    id1.set_tag(4095);
+    id2.set_tag(13);
 
     EXPECT_TRUE(slotMap.has_key(id1));
     EXPECT_TRUE(slotMap.has_key(id2));
 
     auto ud1 = id1.get_tag();
-    EXPECT_EQ(ud1, 12345u);
+    EXPECT_EQ(ud1, 4095u);
     auto ud2 = id2.get_tag();
-    EXPECT_EQ(ud2, 67890u);
+    EXPECT_EQ(ud2, 13u);
 }
 
 TEST(SlotMapTest, TagTest32)
@@ -273,7 +273,6 @@ TEST(SlotMapTest, TagTest32)
     EXPECT_EQ(ud2, 3u);
 }
 
-
 TEST(SlotMapTest, KeyImplicitConversionToNumber64)
 {
     auto key = dod::slot_map_key64<int>::invalid();
@@ -287,7 +286,6 @@ TEST(SlotMapTest, KeyImplicitConversionToNumber32)
     uint32_t test = key;
     EXPECT_EQ(test, 0ull);
 }
-
 
 void testFunction(dod::slot_map<std::string>::key k, const dod::slot_map<std::string>& slotMap)
 {
@@ -724,7 +722,6 @@ TEST(SlotMapTest, CopyAssignmentWithInactivePages)
     {
         for (size_t j = 0; j < static_cast<size_t>(decltype(slotMapA)::key::kMaxVersion) + 10; j++)
         {
-
             auto id = slotMapA.emplace();
             slotMapA.erase(id);
         }

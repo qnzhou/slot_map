@@ -6,6 +6,8 @@
 #include <optional>
 #include <stdint.h>
 #include <vector>
+#include <algorithm>
+
 
 #include <inttypes.h>
 #define PRIslotkey PRIu64
@@ -118,34 +120,38 @@ const std::string* value = strings.get(numKey);
 
 64-bit key
 
-ID structure   |  num_bits
-----------------+----------------------
-tag            |  24
-version        |  16 (0..65,535)
-index          |  24 (0..16,777,215)
+| Component      |  Number of bits        |
+| ---------------|------------------------|
+| tag            |  12                    |
+| version        |  20 (0..1,048,575      |
+| index          |  32 (0..4,294,967,295) |
 
 */
 template <typename T> struct slot_map_key64
 {
     using id_type = uint64_t;
-    using version_t = uint16_t;
+    using version_t = uint32_t;
     using index_t = uint32_t;
-    using tag_t = uint32_t;
+    using tag_t = uint16_t;
 
     static inline constexpr version_t kInvalidVersion = 0x0u;
     static inline constexpr version_t kMinVersion = 0x1u;
-    static inline constexpr version_t kMaxVersion = 0xffffu;
+    static inline constexpr version_t kMaxVersion = 0x0fffffu;
+    static inline constexpr index_t kMaxIndex = 0xffffffffu;
+    static inline constexpr tag_t kMaxTag = 0x0fffu;
+    
+    static inline constexpr id_type kIndexMask = 0x00000000ffffffffull;
+    
+    static inline constexpr id_type kVersionMask = 0x0fffff00000000ull;
+    static inline constexpr id_type kVersionShift = 32ull;
 
-    static inline constexpr id_type kIndexMask = 0xffffffull;
-    static inline constexpr id_type kVersionMask = 0xffff000000ull;
-    static inline constexpr id_type kVersionShift = 24ull;
-    static inline constexpr id_type kHandleTagMask = 0xffffff0000000000ull;
-    static inline constexpr id_type kHandleTagShift = 40ull;
+    static inline constexpr id_type kHandleTagMask = 0xfff0000000000000ull;
+    static inline constexpr id_type kHandleTagShift = 52ull;
 
-    static inline slot_map_key64 make(version_t version, index_t index)
+    static inline constexpr slot_map_key64 make(version_t version, index_t index) noexcept
     {
         SLOT_MAP_ASSERT(version != kInvalidVersion);
-        SLOT_MAP_ASSERT(index <= 0xffffff);
+        SLOT_MAP_ASSERT(index <= kMaxIndex);
         id_type v = (static_cast<id_type>(version) << kVersionShift) & kVersionMask;
         id_type i = (static_cast<id_type>(index)) & kIndexMask;
         return slot_map_key64{v | i};
@@ -169,7 +175,7 @@ template <typename T> struct slot_map_key64
     inline tag_t get_tag() const noexcept { return static_cast<tag_t>((raw & kHandleTagMask) >> kHandleTagShift); }
     inline void set_tag(tag_t tag) noexcept
     {
-        SLOT_MAP_ASSERT(tag <= 0xffffff);
+        SLOT_MAP_ASSERT(tag <= kMaxTag);
         id_type ud = (static_cast<id_type>(tag) << kHandleTagShift) & kHandleTagMask;
         raw = ((raw & (~kHandleTagMask)) | ud);
     }
@@ -199,11 +205,11 @@ template <typename T> struct slot_map_key64
 
 32-bit key
 
-ID structure   |  num_bits
-----------------+----------------------
-tag            |  2
-version        |  10 (0..1023)
-index          |  20 (0..1,048,576)
+| Component      |  Number of bits     |
+| ---------------|---------------------|
+| tag            |  2                  |
+| version        |  10 (0..1023)       |
+| index          |  20 (0..1,048,576)  |
 
 */
 template <typename T> struct slot_map_key32
@@ -216,17 +222,21 @@ template <typename T> struct slot_map_key32
     static inline constexpr version_t kInvalidVersion = 0x0u;
     static inline constexpr version_t kMinVersion = 0x1u;
     static inline constexpr version_t kMaxVersion = 0x0400u;
+    static inline constexpr index_t kMaxIndex = 0x000fffffu;
+    static inline constexpr tag_t kMaxTag = 0x03u;
 
     static inline constexpr id_type kIndexMask = 0x0fffffull;
+
     static inline constexpr id_type kVersionMask = 0x3ff00000ull;
     static inline constexpr id_type kVersionShift = 20ull;
+
     static inline constexpr id_type kHandleTagMask = 0xc0000000ull;
     static inline constexpr id_type kHandleTagShift = 30ull;
 
-    static inline slot_map_key32 make(version_t version, index_t index)
+    static inline constexpr slot_map_key32 make(version_t version, index_t index) noexcept
     {
         SLOT_MAP_ASSERT(version != kInvalidVersion);
-        SLOT_MAP_ASSERT(index <= 0xffffff);
+        SLOT_MAP_ASSERT(index <= kMaxIndex);
         id_type v = (static_cast<id_type>(version) << kVersionShift) & kVersionMask;
         id_type i = (static_cast<id_type>(index)) & kIndexMask;
         return slot_map_key32{v | i};
@@ -250,7 +260,7 @@ template <typename T> struct slot_map_key32
     inline tag_t get_tag() const noexcept { return static_cast<tag_t>((raw & kHandleTagMask) >> kHandleTagShift); }
     inline void set_tag(tag_t tag) noexcept
     {
-        SLOT_MAP_ASSERT(tag <= 0xffffff);
+        SLOT_MAP_ASSERT(tag <= kMaxTag);
         id_type ud = (static_cast<id_type>(tag) << kHandleTagShift) & kHandleTagMask;
         raw = ((raw & (~kHandleTagMask)) | ud);
     }
@@ -797,9 +807,9 @@ template <typename T, typename TKeyType = slot_map_key64<T>, size_t PAGESIZE = 4
         m.version = slotVersion;
         m.tombstone = 1;
 
-        ValueStorage& v = getValueByAddr(addr);
         if constexpr (!std::is_trivially_destructible<T>::value)
         {
+            ValueStorage& v = getValueByAddr(addr);
             const T* pv = reinterpret_cast<const T*>(&v);
             destruct(pv);
         }

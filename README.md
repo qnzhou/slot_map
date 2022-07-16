@@ -59,7 +59,7 @@ slot_map<int>::key numKey2{rawKey}; // create key from numeric type
 ```
 
 When a slot is reused, its version is automatically incremented (to invalidate all existing keys that refers to the same slot).
-But since we only use 16-bits for version counter, there is a possibility that the version counter will wrap around,
+But since we only use 20-bits for version counter, there is a possibility that the version counter will wrap around,
 and a new item will get the same key as a removed item.
 
 To mitigate this potential issue, once the version counter overflows, we disable that slot so that no new keys are returned for this slot
@@ -68,7 +68,7 @@ To mitigate this potential issue, once the version counter overflows, we disable
 To prevent version overflow from happening too often, we need to ensure that we don't reuse the same slot too often.
 So we do not reuse recently freed slot-indices as long as their number is below a certain threshold (`kMinFreeIndices = 64`).
 
-Keys also can carry an extra 24 bits of information provided by a user that we called `tag`. That might be handy to add application-specific data to keys.
+Keys also can carry a few extra bits of information provided by a user that we called `tag`. That might be handy to add application-specific data to keys.
 
 For example:
 ```cpp
@@ -84,11 +84,11 @@ Here is how internal key structure is look like
 
 64-bit key type
 
-| Component      |  Number of bits     |
-| ---------------|---------------------|
-| tag            |  24                 |
-| version        |  16 (0..65,535)     |
-| index          |  24 (0..16,777,215) |
+| Component      |  Number of bits        |
+| ---------------|------------------------|
+| tag            |  12                    |
+| version        |  20 (0..1,048,575      |
+| index          |  32 (0..4,294,967,295) |
 
 32-bit key type
 
@@ -98,7 +98,7 @@ Here is how internal key structure is look like
 | version        |  10 (0..1023)       |
 | index          |  20 (0..1,048,576)  |
 
-Note: To use your custom memory allocator simply define `SLOT_MAP_ALLOC`/`SLOT_MAP_FREE` before including `"slot_map.h"`
+Note: To use your custom memory allocator define `SLOT_MAP_ALLOC`/`SLOT_MAP_FREE` before including `"slot_map.h"`
 
 ```cpp
 #define SLOT_MAP_ALLOC(sizeInBytes, alignment) aligned_alloc(alignment, sizeInBytes)
