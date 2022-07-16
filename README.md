@@ -144,7 +144,7 @@ Returns true if the slot map is empty.
 `size_type size() const noexcept`  
 Returns the number of elements in the slot map.  
 
-`void swap(slot_map& other) noexcept`
+`void swap(slot_map& other) noexcept`  
 Exchanges the content of the slot map by the content of another slot map object of the same type.  
   
 `slot_map(const slot_map& other)`  
@@ -156,12 +156,12 @@ Copy assignment
 `slot_map(slot_map&& other) noexcept`  
 Move constructor
 
-`slot_map& operator=(slot_map&& other) noexcept`
+`slot_map& operator=(slot_map&& other) noexcept`  
 Move asignment
 
 
-`const_values_iterator begin() const noexcept`
-`const_values_iterator end() const noexcept`
+`const_values_iterator begin() const noexcept`  
+`const_values_iterator end() const noexcept`  
 Const values iterator
 
 ```cpp
@@ -171,7 +171,7 @@ for (const auto& value : slotMap)
 }
 ```
 
-`Items items() const noexcept`
+`Items items() const noexcept`  
 Const key/value iterator
 
 ```cpp
