@@ -59,7 +59,7 @@ slot_map<int>::key numKey2{rawKey}; // create key from numeric type
 ```
 
 When a slot is reused, its version is automatically incremented (to invalidate all existing keys that refers to the same slot).
-But since we only use 20-bits (10-bits for 32 bit keys) for version counter, there is a possibility that the version counter will wrap around,
+But since we only use 20-bits *(10-bits for 32 bit keys)* for version counter, there is a possibility that the version counter will wrap around,
 and a new item will get the same key as a removed item.
 
 To mitigate this potential issue, once the version counter overflows, we disable that slot so that no new keys are returned for this slot
