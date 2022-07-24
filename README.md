@@ -183,6 +183,10 @@ for (const auto& [key, value] : slotMap.items())
 ```
   
 # References
+
+  Sean Middleditch  
+  Data Structures for Game Developers: The Slot Map, 2013  
+  https://web.archive.org/web/20180121142549/http://seanmiddleditch.com/data-structures-for-game-developers-the-slot-map/ 
   
   Niklas Gray  
   Building a Data-Oriented Entity System (part 1), 2014  
