@@ -223,3 +223,9 @@ for (const auto& [key, value] : slotMap.items())
   Jeff Gates  
   Init, Update, Draw - Data Arrays, 2012  
   https://greysphere.tumblr.com/post/31601463396/data-arrays  
+  
+  Niklas Gray  
+  Data Structures Part 1: Bulk Data, 2019  
+  https://ourmachinery.com/post/data-structures-part-1-bulk-data/  
+  
+  
