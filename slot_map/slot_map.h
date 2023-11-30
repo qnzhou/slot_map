@@ -1173,7 +1173,7 @@ template <typename T, typename TKeyType = slot_map_key64<T>, size_t PAGESIZE = 4
     const_values_iterator begin() const noexcept
     {
         size_type index = 0;
-        while (index <= getMaxValidIndex() && isTombstone(index))
+        while (index <= getMaxValidIndex() && !pages.empty() && isTombstone(index))
         {
             index++;
         }
@@ -1293,7 +1293,7 @@ template <typename T, typename TKeyType = slot_map_key64<T>, size_t PAGESIZE = 4
         const_kv_iterator begin() const noexcept
         {
             size_type index = 0;
-            while (index <= slotMap->getMaxValidIndex() && slotMap->isTombstone(index))
+            while (index <= slotMap->getMaxValidIndex() && !slotMap->pages.empty() && slotMap->isTombstone(index))
             {
                 index++;
             }
