@@ -840,6 +840,10 @@ template <typename T, typename TKeyType = slot_map_key64<T>, size_t PAGESIZE = 4
     ~slot_map() { callDtors(); }
 
     size_type getMaxValidIndex() const noexcept { return maxValidIndex; }
+    bool isValidIndex(index_t index) const noexcept {
+        if (index > getMaxValidIndex()) { return false; }
+        return !isTombStone(index);
+    }
 
     /*
       Returns true if the slot map contains a specific key
