@@ -648,8 +648,6 @@ template <typename T, typename TKeyType = slot_map_key64<T>, size_t PAGESIZE = 4
         return (page.meta != nullptr);
     }
 
-    size_type getMaxValidIndex() const noexcept { return maxValidIndex; }
-
     void copyFrom(const slot_map& other)
     {
         reset();
@@ -840,6 +838,8 @@ template <typename T, typename TKeyType = slot_map_key64<T>, size_t PAGESIZE = 4
     {
     }
     ~slot_map() { callDtors(); }
+
+    size_type getMaxValidIndex() const noexcept { return maxValidIndex; }
 
     /*
       Returns true if the slot map contains a specific key
